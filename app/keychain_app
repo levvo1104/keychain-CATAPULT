@@ -1,0 +1,17 @@
+//
+//  keychain_app.swift
+//  keychain
+//
+//  Created by Annetti Ruiz millán on 4/4/26.
+//
+
+import SwiftUI
+
+@main
+struct keychainApp: App {
+    var body: some Scene {
+        WindowGroup {
+            HabitCreationView(isPresented: .constant(true))
+        }
+    }
+}

@@ -11,7 +11,7 @@ import SwiftUI
 struct keychainApp: App {
     var body: some Scene {
         WindowGroup {
-            AccountCreationView(isPresented: .constant(true))
+            AccountCreationView()
         }
     }
 }

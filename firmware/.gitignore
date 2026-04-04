@@ -1,1 +1,38 @@
+# --- Arduino Build Artifacts ---
+# Temporary build folders created by the IDE or CLI
+build/
+/bin/
+/obj/
+/out/
+*.o
+*.a
+*.so
+*.elf
+*.hex
+*.bin
+*.map
+*.d
 
+# --- IDE Specific Files ---
+# Arduino IDE 2.0+ 
+.arduino/
+arduino.json
+
+# VS Code / PlatformIO
+.vscode/
+.pio/
+.cache/
+compile_commands.json
+
+# Visual Micro (Visual Studio)
+_vm/
+*.vsarduino.h
+
+# --- Sensitive Information ---
+# Exclude files containing passwords or API keys
+secrets.h
+passwords.h
+
+# --- OS Specific Files ---
+.DS_Store
+Thumbs.db

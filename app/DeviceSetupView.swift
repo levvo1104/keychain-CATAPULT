@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreBluetooth
+import Combine
 
 // MARK: - BLE UUIDs
 // Replace these with the actual UUIDs from your keychain firmware

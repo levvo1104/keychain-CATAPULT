@@ -34,7 +34,7 @@ struct HabitCreationView: View {
             // Mark: Dimmed blurred background
             Color.black.opacity(0.45)
                 .ignoresSafeArea()
-                .ontapGesture {
+                .onTapGesture {
                     isPresented = false
                 }
         
@@ -44,13 +44,13 @@ struct HabitCreationView: View {
             
                 // -- Top hero area (blurred) --
                 ZStack {
-                    RoundedRectangle(cornerRadius: 24, styple: .continuous)
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .fill(.ultraThinMaterial)
                         .frame(height: 180)
                     
                     VStack(spacing: 8) {
                         Text("New Habit")
-                            .font(.system(size: 13, weight: semibold))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(.secondary)
                             .tracking(1.5)
                             .textCase(.uppercase)
@@ -63,11 +63,11 @@ struct HabitCreationView: View {
                                 Circle()
                                     .fill(selectedColor.opacity(0.18))
                                     .frame(width: 72, height: 72)
-                                Cicle()
+                                Circle()
                                     .strokeBorder(selectedColor, lineWidth: 2)
                                     .frame(width: 72, height: 72)
                                 Image(systemName: "plus")
-                                    .font(.system(size: 28, weight: medium))
+                                    .font(.system(size: 28, weight: .medium))
                                     .foregroundStyle(selectedColor)
                             }
                         }
@@ -82,8 +82,8 @@ struct HabitCreationView: View {
 
                     // Habit Name
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Habit Name", systemImage: "pencil")
-                            .font(.system(size: 12, weight: semibold))
+                        Label("Habit Name", systemImage: "pencil")
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
                             .tracking(1)
@@ -101,7 +101,7 @@ struct HabitCreationView: View {
                     // how often?
                     VStack(alignment: .leading, spacing: 6) {
                         Label("how often?", systemImage: "calendar")
-                            .font(.system(size: 12, weight: semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
                             .tracking(1)
@@ -119,12 +119,12 @@ struct HabitCreationView: View {
                                 }
                             }
                             .pickerStyle(.menu)
-                            .tint(SelectedColor)
+                            .tint(selectedColor)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 6)
                             .background(
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(SelectedColor.opacity(0.1))
+                                    .fill(selectedColor.opacity(0.1))
                             )
                         }
                         .padding(.horizontal, 14)
@@ -138,7 +138,7 @@ struct HabitCreationView: View {
                     // how much?
                     VStack(alignment: .leading, spacing: 6) {
                         Label("how much pookie?", systemImage: "number")
-                            .font(.system(size: 12, weight: semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
                             .tracking(1)
@@ -149,7 +149,7 @@ struct HabitCreationView: View {
                                 Spacer()
                                 Stepper("", value: $timesCount, in: 1...99)
                                     .labelsHidden()
-                                    .tint(SelectedColor)
+                                    .tint(selectedColor)
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
@@ -162,7 +162,7 @@ struct HabitCreationView: View {
                     // Customization - Color Picker
                     VStack(alignment: .leading, spacing: 6) {
                         Label("Customizations", systemImage: "paintpalette")
-                            .font(.system(size: 12, weight: semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.secondary)
                             .textCase(.uppercase)
                             .tracking(1)
@@ -219,13 +219,13 @@ struct HabitCreationView: View {
                     isPresented = false
                 } label: {
                     Text("Done!")
-                        .font(.system(size: 17, weight: semibold))
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
                         .background(
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(SelectedColor)
+                                .fill(selectedColor)
                         )
                 }
                 .buttonStyle(.plain)
@@ -248,5 +248,5 @@ struct HabitCreationView: View {
 // MARK: - Preview
 
 #Preview {
-    HabitCreationPage()
+    HabitCreationView(isPresented: .constant(true))
 }

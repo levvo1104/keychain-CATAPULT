@@ -1,15 +1,9 @@
-//
-//  keychain_app.swift
-//  keychain
-//
-
 import SwiftUI
-
 @main
 struct keychainApp: App {
-    var body: some Scene {
-        WindowGroup {
-            HabitCreationView(isPresented: .constant(true))
-        }
+    var body: some Scene
+    WindowGroup {
+        ContentView()
     }
+}
 }

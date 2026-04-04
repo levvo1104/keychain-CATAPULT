@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 
-// MARK: - Models
+
 enum Gender: String, CaseIterable {
     case woman = "woman"
     case man = "man"
@@ -22,7 +22,7 @@ enum HabitFrequency: String, CaseIterable {
     case weekly = "Weekly"
 }
 
-// MARK: - OnboardingState
+
 class OnboardingState: ObservableObject {
     @Published var currentStep: Int = 0
     @Published var userName: String = ""
@@ -58,7 +58,7 @@ class OnboardingState: ObservableObject {
     }
 }
 
-// MARK: - AccountCreationView (Root)
+
 struct AccountCreationView: View {
     @StateObject private var state = OnboardingState()
     @State private var isComplete = false
@@ -75,7 +75,7 @@ struct AccountCreationView: View {
                     ))
             } else {
                 VStack(spacing: 0) {
-                    // Top bar: back button + step dots
+    
                     HStack {
                         if state.currentStep > 0 {
                             Button(action: { state.goBack() }) {
@@ -101,7 +101,7 @@ struct AccountCreationView: View {
                     .padding(.horizontal, 24)
                     .padding(.top, 16)
 
-                    // Step content
+          
                     ZStack {
                         stepView(for: state.currentStep)
                             .id(state.currentStep)
@@ -113,7 +113,7 @@ struct AccountCreationView: View {
                     .animation(.spring(response: 0.45, dampingFraction: 0.82), value: state.currentStep)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                    // Continue button
+              
                     if state.currentStep != 4 || !state.createdHabits.isEmpty {
                         Button(action: {
                             if state.currentStep == state.totalSteps - 1 {
@@ -121,7 +121,7 @@ struct AccountCreationView: View {
                                     isComplete = true
                                 }
                             } else {
-                                state.advance() // Fixed: added ()
+                                state.advance()
                             }
                         }) {
                             Text(state.currentStep == state.totalSteps - 1 ? "Finish" : "Continue")
@@ -139,7 +139,7 @@ struct AccountCreationView: View {
         }
     }
 
-    // MARK: - Subviews
+  
     @ViewBuilder
     func stepView(for step: Int) -> some View {
         switch step {

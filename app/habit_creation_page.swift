@@ -16,6 +16,8 @@ enum HabitFrequency: String, CaseIterable, Identifiable {
 
 struct HabitCreationView: View {
     @Binding var isPresented: Bool
+
+    var onSave: ((String, HabitFrequency, Int, Color) -> Void)? = nil
     
     // Form State
     @State private var habitName: String = ""
@@ -37,7 +39,6 @@ struct HabitCreationView: View {
                 .onTapGesture {
                     isPresented = false
                 }
-        
 
             // Mark: Modal Card
             VStack(spacing: 0) {
@@ -215,6 +216,11 @@ struct HabitCreationView: View {
 
                 // -- Done Button --
                 Button {
+                    guard !habitName.trimmingCharacters(in: .whitespaces).isEmpty else {
+                        return
+                    }
+                    onSave?(habitName.trimmingCharacters(in: .whitespaces), frequency, timesCount, selectedColor)
+                    isPresented = false
                     // [TODO] save habit
                     isPresented = false
                 } label: {
@@ -225,10 +231,14 @@ struct HabitCreationView: View {
                         .padding(.vertical, 15)
                         .background(
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(selectedColor)
+                                .fill(habitName.trimmingCharacters(in: .whitespaces).isEmpty
+                                    ? Color(.systemGray6)
+                                    : selectedColor
+                                )
                         )
                 }
                 .buttonStyle(.plain)
+                .disabled(habitName.trimmingCharacters(in: .whitespaces).isEmpty)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 28)
             }

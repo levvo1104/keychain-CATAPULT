@@ -9,6 +9,7 @@ struct Habit: Identifiable {
     var frequency: HabitFrequency
     var timesGoal: Int
     var timesCompleted: Int
+    var totalTimesRequired: Int
     var color: Color
 
     var isCompleted: Bool { timesCompleted >= timesGoal }
@@ -24,8 +25,8 @@ struct Habit: Identifiable {
 struct HomeView: View {
     @EnvironmentObject var session: AppSession
     @State private var habits: [Habit] = [
-        Habit(name: "Morning Run", frequency: .day, timesGoal: 1, timesCompleted: 0, color: .blue),
-        Habit(name: "Read 20 Pages", frequency: .day, timesGoal: 1, timesCompleted: 1, color: .green),
+        Habit(name: "Morning Run", frequency: .day, timesGoal: 1, timesCompleted: 0, totalTimesRequired: 30, color: .blue),
+        Habit(name: "Read 20 Pages", frequency: .day, timesGoal: 1, timesCompleted: 1, totalTimesRequired: 30, color: .green),
     ]
     @State private var showHabitCreation = false
     @State private var showProfile = false

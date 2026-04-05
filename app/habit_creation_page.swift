@@ -20,11 +20,20 @@ struct HabitCreationView: View {
     var onSave: ((String, HabitFrequency, Int, Int, Color) -> Void)? = nil
     
     // Form State
+    
+    var initialName: String = ""
+    var initialFrequency: HabitFrequency = .day
+    var initialTimesCount: Int = 1
+    var initialTotalTimes: Int = 30
+    var initialColor: Color = .blue
+
     @State private var habitName: String = ""
     @State private var frequency: HabitFrequency = .day
     @State private var timesCount: Int = 1
     @State private var totalTimesRequired: Int = 30
     @State private var selectedColor: Color = .blue
+    
+
 
     // Color options for color wheel
     let colorOptions: [Color] = [
@@ -277,6 +286,13 @@ struct HabitCreationView: View {
             .transition(.move(edge: .bottom).combined(with: .opacity))
         }
         .animation(.spring(response: 0.45, dampingFraction: 0.82), value: isPresented)
+        .onAppear {
+                    habitName = initialName
+                    frequency = initialFrequency
+                    timesCount = initialTimesCount
+                    totalTimesRequired = initialTotalTimes
+                    selectedColor = initialColor
+                }
     }
 }
 

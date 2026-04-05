@@ -15,6 +15,7 @@ class UserProfile: ObservableObject {
 struct ProfileSettingsView: View {
     @EnvironmentObject var session: AppSession
     @Environment(\.dismiss) var dismiss
+    var onLogOut: (() -> Void)? = nil  
     @StateObject private var profile = UserProfile()
     @State private var showEditProfile = false
     @State private var showLogOutConfirm = false
@@ -92,12 +93,13 @@ struct ProfileSettingsView: View {
             // ── Edit Profile Sheet ──
             .sheet(isPresented: $showEditProfile) {
                 EditProfileView(profile: profile)
+                
             }
  
             // ── Log Out Confirmation ──
             .confirmationDialog("Log out of your account?", isPresented: $showLogOutConfirm, titleVisibility: .visible) {
                 Button("Log Out", role: .destructive) {
-                    session.signOut()
+                    onLogOut?()
                 }
                 Button("Cancel", role: .cancel) {}
             }

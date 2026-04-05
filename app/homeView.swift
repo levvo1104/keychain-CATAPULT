@@ -9,6 +9,7 @@ struct Habit: Identifiable {
     var frequency: HabitFrequency
     var timesGoal: Int
     var timesCompleted: Int
+    var totalTimesRequired: Int   // Cumulative all-time target completions
     var color: Color
 
     var isCompleted: Bool { timesCompleted >= timesGoal }
@@ -24,8 +25,8 @@ struct Habit: Identifiable {
 struct HomeView: View {
     @EnvironmentObject var session: AppSession
     @State private var habits: [Habit] = [
-        Habit(name: "Morning Run", frequency: .day, timesGoal: 1, timesCompleted: 0, color: .blue),
-        Habit(name: "Read 20 Pages", frequency: .day, timesGoal: 1, timesCompleted: 1, color: .green),
+        Habit(name: "Morning Run", frequency: .day, timesGoal: 1, timesCompleted: 0, totalTimesRequired: 30, color: .blue),
+        Habit(name: "Read 20 Pages", frequency: .day, timesGoal: 1, timesCompleted: 1, totalTimesRequired: 30, color: .green),
     ]
     @State private var showHabitCreation = false
     @State private var showProfile = false
@@ -105,12 +106,13 @@ struct HomeView: View {
             // MARK: Habit Creation Modal — inside NavigationStack
             .overlay {
                 if showHabitCreation {
-                    HabitCreationView(isPresented: $showHabitCreation) { name, frequency, count, color in
+                    HabitCreationView(isPresented: $showHabitCreation) { name, frequency, count, totalRequired, color in
                         let newHabit = Habit(
                             name: name,
                             frequency: frequency,
                             timesGoal: count,
                             timesCompleted: 0,
+                            totalTimesRequired: totalRequired,
                             color: color
                         )
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
@@ -185,10 +187,10 @@ struct SwipeToDeleteContainer<Content: View>: View {
                 }
             } label: {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 18, style: continuous)
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .fill(Color.red)
                     Image(systemName: "trash.fill")
-                        .font(.system(size: 18, weight: medium))
+                        .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(.white)
                 }
                 .frame(width: deleteButtonWidth)
@@ -199,13 +201,13 @@ struct SwipeToDeleteContainer<Content: View>: View {
             content.offset(x: offset).gesture(
                 DragGesture(minimumDistance: 10)
                     .onChanged { value in
-                        let translation = value.transition.width
+                        let translation = value.translation.width
                         if translation < 0 {
-                            withAnimation(.interactiveString()) {
+                            withAnimation(.interactiveSpring()) {
                                 offset = max(translation, -deleteButtonWidth)
                             }
                         } else if offset < 0 {
-                            withAnimation(.interactiveString()) {
+                            withAnimation(.interactiveSpring()) {
                                 offset = min(0, offset + translation)
                             }
                         }

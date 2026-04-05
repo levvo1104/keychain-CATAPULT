@@ -9,7 +9,6 @@ struct Habit: Identifiable {
     var frequency: HabitFrequency
     var timesGoal: Int
     var timesCompleted: Int
-    var totalTimesRequired: Int   // Cumulative all-time target completions
     var color: Color
 
     var isCompleted: Bool { timesCompleted >= timesGoal }
@@ -25,8 +24,8 @@ struct Habit: Identifiable {
 struct HomeView: View {
     @EnvironmentObject var session: AppSession
     @State private var habits: [Habit] = [
-        Habit(name: "Morning Run", frequency: .day, timesGoal: 1, timesCompleted: 0, totalTimesRequired: 30, color: .blue),
-        Habit(name: "Read 20 Pages", frequency: .day, timesGoal: 1, timesCompleted: 1, totalTimesRequired: 30, color: .green),
+        Habit(name: "Morning Run", frequency: .day, timesGoal: 1, timesCompleted: 0, color: .blue),
+        Habit(name: "Read 20 Pages", frequency: .day, timesGoal: 1, timesCompleted: 1, color: .green),
     ]
     @State private var showHabitCreation = false
     @State private var showProfile = false
@@ -106,13 +105,13 @@ struct HomeView: View {
             // MARK: Habit Creation Modal — inside NavigationStack
             .overlay {
                 if showHabitCreation {
-                    HabitCreationView(isPresented: $showHabitCreation) { name, frequency, count, totalRequired, color in
+                    HabitCreationView(isPresented: $showHabitCreation) { name, frequency, count, requiredTime, color in
                         let newHabit = Habit(
                             name: name,
                             frequency: frequency,
                             timesGoal: count,
                             timesCompleted: 0,
-                            totalTimesRequired: totalRequired,
+                            totalTimesRequired: requiredTime,
                             color: color
                         )
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
@@ -180,7 +179,7 @@ struct SwipeToDeleteContainer<Content: View>: View {
             // Delete button revealed behind card
             Button {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    offset = -UIScreen.main.bounds.width
+                    offset = -500
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                     onDelete()

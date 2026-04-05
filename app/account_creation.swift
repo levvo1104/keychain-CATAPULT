@@ -70,6 +70,7 @@ class OnboardingState: ObservableObject {
 // MARK: - AccountCreationView (Root)
 
 struct AccountCreationView: View {
+    @EnvironmentObject var session: AppSession
     @StateObject private var state = OnboardingState()
     @State private var isComplete = false
 
@@ -78,7 +79,19 @@ struct AccountCreationView: View {
             Color(.systemBackground).ignoresSafeArea()
 
             if isComplete {
-                OnboardingCompleteView()
+                OnboardingCompleteView(onFinish:{
+                    session.initialHabits = state.createdHabits.map {
+                                AppSession.OnboardingHabit(
+                                    name: $0.name,
+                                    frequency: $0.frequency,
+                                    timesGoal: $0.timesCount,
+                                    color: $0.color
+                                )
+                            }
+                    session.userName = state.userName                        
+                    session.userAge = state.ageRange?.rawValue ?? ""
+                    session.signIn()
+                })
                     .transition(.asymmetric(
                         insertion: .move(edge: .trailing).combined(with: .opacity),
                         removal: .opacity
@@ -524,13 +537,14 @@ struct OnboardingSelectionRow: View {
 // MARK: - Completion Screen
 
 struct OnboardingCompleteView: View {
+    var onFinish: () -> Void
     @State private var appeared = false
 
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
 
-            Text("🎉")
+            Text("HURRAY")
                 .font(.system(size: 72))
                 .scaleEffect(appeared ? 1 : 0.4)
                 .opacity(appeared ? 1 : 0)
@@ -553,9 +567,10 @@ struct OnboardingCompleteView: View {
             Spacer()
         }
         .onAppear {
-            withAnimation {
-                appeared = true
-            }
+            withAnimation {appeared = true}
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                   onFinish()  
+               }
         }
     }
 }

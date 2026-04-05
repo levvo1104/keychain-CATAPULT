@@ -28,9 +28,6 @@ struct ButtonState: Identifiable {
 // MARK: - Bluetooth Manager
 class KeychainBluetoothManager: NSObject, ObservableObject {
 
-    //Lets other files contact to this one
-    static let shared = KeychainBluetoothManager()
-
     // Published state
     @Published var scanState: ScanState = .idle
     @Published var connectionState: ConnectionState = .disconnected
@@ -200,7 +197,7 @@ struct HabitPayload: Codable {
 // MARK: - Device Setup View
 // ============================================================
 struct DeviceSetupView: View {
-    @StateObject private var ble = KeychainBluetoothManager.shared
+    @StateObject private var ble = KeychainBluetoothManager()
     @State private var showButtonDashboard = false
 
     var body: some View {

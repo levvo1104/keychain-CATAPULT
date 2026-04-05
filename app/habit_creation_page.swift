@@ -17,12 +17,13 @@ enum HabitFrequency: String, CaseIterable, Identifiable {
 struct HabitCreationView: View {
     @Binding var isPresented: Bool
 
-    var onSave: ((String, HabitFrequency, Int, Color) -> Void)? = nil
+    var onSave: ((String, HabitFrequency, Int, Int, Color) -> Void)? = nil
     
     // Form State
     @State private var habitName: String = ""
     @State private var frequency: HabitFrequency = .day
     @State private var timesCount: Int = 1
+    @State private var totalTimesRequired: Int = 30
     @State private var selectedColor: Color = .blue
 
     // Color options for color wheel
@@ -160,6 +161,30 @@ struct HabitCreationView: View {
                         )
                     }
 
+                    // total required
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label("Total Goal", systemImage: "flag.checkered")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .textCase(.uppercase)
+                            .tracking(1)
+
+                        HStack {
+                            Text("\(totalTimesRequired) total")
+                                .font(.system(size: 15))
+                            Spacer()
+                            Stepper("", value: $totalTimesRequired, in: 1...9999)
+                                .labelsHidden()
+                                .tint(selectedColor)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color(.systemGray6))
+                        )
+                    }
+
                     // Customization - Color Picker
                     VStack(alignment: .leading, spacing: 6) {
                         Label("Customizations", systemImage: "paintpalette")
@@ -219,7 +244,7 @@ struct HabitCreationView: View {
                     guard !habitName.trimmingCharacters(in: .whitespaces).isEmpty else {
                         return
                     }
-                    onSave?(habitName.trimmingCharacters(in: .whitespaces), frequency, timesCount, selectedColor)
+                    onSave?(habitName.trimmingCharacters(in: .whitespaces), frequency, timesCount, totalTimesRequired, selectedColor)
                     isPresented = false
                     // [TODO] save habit
                     isPresented = false

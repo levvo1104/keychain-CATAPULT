@@ -45,8 +45,12 @@ struct HomeView: View {
                 ScrollView {
                     VStack(spacing: 12) {
                         ForEach(sortedHabits) { habit in
-                            HabitCard(habit: habit) {
+                            SwipeToDeleteContainer {
+                                deleteHabit(id: habit.id)
+                            } content: {
+                                HabitCard(habit: habit) {
                                 logCompletion(for: habit.id)
+                                }
                             }
                             .transition(.asymmetric(
                                 insertion: .opacity.combined(with: .move(edge: .top)),
@@ -131,6 +135,14 @@ struct HomeView: View {
 
     // MARK: Helpers
 
+    func deleteHabit(id: UUID) {
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
+            habits.removeAll {
+                $0.id == id
+            }
+        }
+    }
+
     func logCompletion(for id: UUID) {
         guard let index = habits.firstIndex(where: { $0.id == id }) else { return }
         withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
@@ -144,6 +156,73 @@ struct HomeView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM d"
         return formatter.string(from: Date())
+    }
+}
+
+// MARK: - Swipe to Delete
+
+struct SwipeToDeleteContainer<Content: View>: View {
+    let content: Content
+    let onDelete: () -> Void
+
+    @State private var offset: CGFloat = 0
+    private let deleteButtonWidth: CGFloat = 72
+
+    init(onDelete: @escaping () -> Void, @ViewBuilder content: () -> Content) {
+        self.onDelete = onDelete
+        self.content = content()
+    }
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            // Delete button revealed behind card
+            Button {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    offset = -UIScreen.main.bounds.width
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    onDelete()
+                }
+            } label: {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 18, style: continuous)
+                        .fill(Color.red)
+                    Image(systemName: "trash.fill")
+                        .font(.system(size: 18, weight: medium))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: deleteButtonWidth)
+            }
+            .buttonStyle(.plain)
+            .opacity(offset < 0 ? 1 : 0)
+
+            content.offset(x: offset).gesture(
+                DragGesture(minimumDistance: 10)
+                    .onChanged { value in
+                        let translation = value.transition.width
+                        if translation < 0 {
+                            withAnimation(.interactiveString()) {
+                                offset = max(translation, -deleteButtonWidth)
+                            }
+                        } else if offset < 0 {
+                            withAnimation(.interactiveString()) {
+                                offset = min(0, offset + translation)
+                            }
+                        }
+                    }
+                    .onEnded { value in
+                        let velocity = value.predictedEndTranslation.width
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            if offset < -deleteButtonWidth / 2 || velocity < -150 {
+                                offset = -deleteButtonWidth
+                            } else {
+                                offset = 0
+                            }
+                        }
+                    }
+            )
+        }
+        .clipped()
     }
 }
 

@@ -35,6 +35,7 @@ class OnboardingState: ObservableObject {
         var name: String
         var frequency: HabitFrequency
         var timesCount: Int
+        var totalTimesRequired: Int
         var color: Color
     }
 
@@ -162,11 +163,12 @@ struct AccountCreationView: View {
 
             // Habit creation sheet
             if state.showHabitSheet {
-                HabitCreationView(isPresented: $state.showHabitSheet) { name, frequency, timesCount, color in
+                HabitCreationView(isPresented: $state.showHabitSheet) { name, frequency, timesCount, totalTimesRequired, color in
                     let habit = OnboardingState.CreatedHabit(
                         name: name,
                         frequency: frequency,
                         timesCount: timesCount,
+                        totalTimesRequired: totalTimesRequired,
                         color: color
                     )
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
@@ -274,7 +276,7 @@ struct NameStepView: View {
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 20)
  
-                Text("We'll use this to personalize your experience.")
+                Text("we'll use this to personalize your experience.")
                     .font(.system(size: 15))
                     .foregroundStyle(.secondary)
                     .opacity(appeared ? 1 : 0)

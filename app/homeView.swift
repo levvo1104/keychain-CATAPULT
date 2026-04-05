@@ -30,6 +30,7 @@ struct HomeView: View {
     ]
     @State private var showHabitCreation = false
     @State private var showProfile = false
+    @State private var habitToEdit: Habit? = nil
 
     private var sortedHabits: [Habit] {
         habits.sorted { lhs, rhs in
@@ -46,13 +47,16 @@ struct HomeView: View {
                 ScrollView {
                     VStack(spacing: 12) {
                         ForEach(sortedHabits) { habit in
-                            SwipeToDeleteContainer {
-                                deleteHabit(id: habit.id)
-                            } content: {
-                                HabitCard(habit: habit) {
-                                logCompletion(for: habit.id)
+                            SwipeToDeleteContainer(
+                                onDelete: { deleteHabit(id: habit.id) },
+                                onLongPress: { habitToEdit = habit },
+                                content: {
+                                    HabitCard(
+                                        habit: habit,
+                                        onTap: { logCompletion(for: habit.id) }
+                                    )
                                 }
-                            }
+                            )
                             .transition(.asymmetric(
                                 insertion: .opacity.combined(with: .move(edge: .top)),
                                 removal: .opacity
@@ -102,8 +106,26 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                 }
             }
+            .onAppear {
+                if !session.initialHabits.isEmpty {
+                    let newHabits = session.initialHabits.map {
+                        Habit(
+                            name: $0.name,
+                            frequency: $0.frequency,
+                            timesGoal: $0.timesGoal,
+                            timesCompleted: 0,
+                            totalTimesRequired: $0.timesGoal,
+                            color: $0.color
+                        )
+                    }
+                    withAnimation {
+                        habits.append(contentsOf: newHabits)
+                    }
+                    session.initialHabits = []
+                }
+            }
 
-            // MARK: Habit Creation Modal — inside NavigationStack
+            // MARK: New Habit Modal
             .overlay {
                 if showHabitCreation {
                     HabitCreationView(isPresented: $showHabitCreation) { name, frequency, count, requiredTime, color in
@@ -122,7 +144,37 @@ struct HomeView: View {
                 }
             }
 
-            // MARK: Profile Sheet — inside NavigationStack
+            // MARK: Edit Habit Modal
+            // MARK: Edit Habit Modal
+            .overlay {
+                if let habit = habitToEdit {
+                    HabitCreationView(
+                        isPresented: Binding(
+                            get: { habitToEdit != nil },
+                            set: { if !$0 { habitToEdit = nil } }
+                        ),
+                        onSave: { name, frequency, count, requiredTime, color in
+                            if let index = habits.firstIndex(where: { $0.id == habit.id }) {
+                                withAnimation {
+                                    habits[index].name = name
+                                    habits[index].frequency = frequency
+                                    habits[index].timesGoal = count
+                                    habits[index].totalTimesRequired = requiredTime
+                                    habits[index].color = color
+                                }
+                            }
+                            habitToEdit = nil
+                        },
+                        initialName: habit.name,
+                        initialFrequency: habit.frequency,
+                        initialTimesCount: habit.timesGoal,
+                        initialTotalTimes: habit.totalTimesRequired,
+                        initialColor: habit.color
+                    )
+                }
+            }
+
+            // MARK: Profile Sheet
             .sheet(isPresented: $showProfile) {
                 ProfileSettingsView(onLogOut: {
                     showProfile = false
@@ -139,9 +191,7 @@ struct HomeView: View {
 
     func deleteHabit(id: UUID) {
         withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
-            habits.removeAll {
-                $0.id == id
-            }
+            habits.removeAll { $0.id == id }
         }
     }
 
@@ -166,18 +216,20 @@ struct HomeView: View {
 struct SwipeToDeleteContainer<Content: View>: View {
     let content: Content
     let onDelete: () -> Void
+    var onLongPress: (() -> Void)? = nil
 
     @State private var offset: CGFloat = 0
-    private let deleteButtonWidth: CGFloat = 72
+    @State private var isDragging = false
+    private let deleteButtonWidth: CGFloat = 80
 
-    init(onDelete: @escaping () -> Void, @ViewBuilder content: () -> Content) {
+    init(onDelete: @escaping () -> Void, onLongPress: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
         self.onDelete = onDelete
+        self.onLongPress = onLongPress
         self.content = content()
     }
 
     var body: some View {
         ZStack(alignment: .trailing) {
-            // Delete button revealed behind card
             Button {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                     offset = -500
@@ -198,24 +250,21 @@ struct SwipeToDeleteContainer<Content: View>: View {
             .buttonStyle(.plain)
             .opacity(offset < 0 ? 1 : 0)
 
-            content.offset(x: offset).gesture(
-                DragGesture(minimumDistance: 10)
+            content.offset(x: offset).simultaneousGesture(
+                DragGesture(minimumDistance: 15, coordinateSpace: .local)
                     .onChanged { value in
+                        guard abs(value.translation.width) > abs(value.translation.height) else { return }
                         let translation = value.translation.width
                         if translation < 0 {
-                            withAnimation(.interactiveSpring()) {
-                                offset = max(translation, -deleteButtonWidth)
-                            }
+                            offset = max(translation, -deleteButtonWidth)
                         } else if offset < 0 {
-                            withAnimation(.interactiveSpring()) {
-                                offset = min(0, offset + translation)
-                            }
+                            offset = min(0, offset + translation)
                         }
                     }
                     .onEnded { value in
                         let velocity = value.predictedEndTranslation.width
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            if offset < -deleteButtonWidth / 2 || velocity < -150 {
+                            if offset < -deleteButtonWidth / 2 || velocity < -200 {
                                 offset = -deleteButtonWidth
                             } else {
                                 offset = 0
@@ -233,6 +282,7 @@ struct SwipeToDeleteContainer<Content: View>: View {
 struct HabitCard: View {
     let habit: Habit
     let onTap: () -> Void
+    var onLongPress: (() -> Void)? = nil
 
     var body: some View {
         Button(action: onTap) {
@@ -273,20 +323,6 @@ struct HabitCard: View {
                         )
                 }
 
-                let remaining = habit.totalTimesRequired - habit.timesCompleted
-                HStack {
-                    Spacer()
-                    if habit.isCompleted {
-                        Text("all done!")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .foregroundStyle(habit.color)
-                    } else {
-                        Text("\(remaining) left")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.tertiary)
-                    }
-                }
-
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule().fill(Color(.systemGray5)).frame(height: 6)
@@ -322,6 +358,9 @@ struct HabitCard: View {
             .opacity(habit.isCompleted ? 0.75 : 1.0)
         }
         .buttonStyle(.plain)
+        .onLongPressGesture {
+            onLongPress?()
+        }
     }
 }
 

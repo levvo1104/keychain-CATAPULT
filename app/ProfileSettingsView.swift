@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
  
 // MARK: - User Profile Model
 class UserProfile: ObservableObject {
@@ -12,6 +13,8 @@ class UserProfile: ObservableObject {
  
 // MARK: - Profile & Settings Root View
 struct ProfileSettingsView: View {
+    @EnvironmentObject var session: AppSession
+    @Environment(\.dismiss) var dismiss
     @StateObject private var profile = UserProfile()
     @State private var showEditProfile = false
     @State private var showLogOutConfirm = false
@@ -94,7 +97,7 @@ struct ProfileSettingsView: View {
             // ── Log Out Confirmation ──
             .confirmationDialog("Log out of your account?", isPresented: $showLogOutConfirm, titleVisibility: .visible) {
                 Button("Log Out", role: .destructive) {
-                    // TODO: clear session / navigate to login
+                    session.signOut()
                 }
                 Button("Cancel", role: .cancel) {}
             }
@@ -162,7 +165,7 @@ struct ProfileImageView: View {
             } else {
                 Image(systemName: "person.fill")
                     .font(.system(size: 28))
-                    .foregroundStyle(.Coloe(.systemGray2))
+                    .foregroundStyle(Color(.systemGray2))
             }
         }
     }
@@ -232,7 +235,7 @@ struct EditProfileView: View {
     }
 }
 
-// Mark: feedback / report view 
+// Mark: feedback / report view
 enum FeedbackType: String, CaseIterable, Identifiable {
     case general = "General Feedback"
     case bug = "Report a Bug"
@@ -241,7 +244,7 @@ enum FeedbackType: String, CaseIterable, Identifiable {
 }
 
 struct FeedbackReportView: View {
-    @State private var feedbackType: FeedbackType = .feedback
+    @State private var feedbackType: FeedbackType = .general
     @State private var message: String = ""
     @State private var submitted = false
 
@@ -261,9 +264,9 @@ struct FeedbackReportView: View {
                     .frame(minHeight: 150)
             }
 
-            section {
-                Button("Submit") { 
-                    //todo: send to backend 
+            Section {
+                Button("Submit") {
+                    //todo: send to backend
                     submitted = true
                     message = ""
                 }
@@ -370,6 +373,9 @@ struct NotificationsSettingsView: View {
 }
  
 // MARK: - Preview
-#Preview {
-    ProfileSettingsView()
+struct ProfileSettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        ProfileSettingsView()
+            .environmentObject(AppSession())
+    }
 }

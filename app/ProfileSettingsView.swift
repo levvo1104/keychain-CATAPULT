@@ -4,7 +4,7 @@ import Combine
 // MARK: - User Profile Model
 class UserProfile: ObservableObject {
     @Published var name: String = "John Doe"
-    @Published var pronouns: String = "he/him"
+    @Published var pronouns: String = "eg.she/her"
     @Published var age: String = "40+"
     @Published var profileImage: UIImage? = nil
     @Published var notificationsEnabled: Bool = true
@@ -53,6 +53,17 @@ struct ProfileSettingsView: View {
                             .controlSize(.small)
                     }
                     .padding(.vertical, 8)
+                }
+                
+                .onAppear {
+                    // Pre-populate from session if profile still has defaults
+                    if profile.name == "John Doe" && !session.userName.isEmpty {
+                        profile.name = session.userName
+                    }
+            
+                    if profile.age == "40+" && !session.userAge.isEmpty {
+                        profile.age = session.userAge
+                    }
                 }
  
                 // ── Settings Rows ──

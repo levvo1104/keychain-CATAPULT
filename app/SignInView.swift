@@ -6,16 +6,32 @@ import Combine
 /// so any view can read or mutate the signed-in state.
 class AppSession: ObservableObject {
     @Published var isSignedIn: Bool = false
+    @Published var showOnboarding: Bool = false
+    @Published var initialHabits: [OnboardingHabit] = []
+    @Published var userName: String = ""
+    @Published var userAge: String = ""
+
+    struct OnboardingHabit {
+            var name: String
+            var frequency: HabitFrequency
+            var timesGoal: Int
+            var color: Color
+        }
 
     func signIn() {
         withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
             isSignedIn = true
+            showOnboarding = false
         }
     }
 
     func signOut() {
         withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
             isSignedIn = false
+            showOnboarding = false
+            initialHabits = []
+            userName = ""
+            userAge = ""
         }
     }
 }
@@ -248,7 +264,7 @@ struct SignInView: View {
                 // Hand off to the onboarding flow (AccountCreationView handles
                 // the multi-step profile setup; it calls session.signIn() when done).
                 // For a direct sign-in after creation, call session.signIn() here instead.
-                session.signIn()
+                session.showOnboarding = true
             } else {
                 // Simulate a wrong-password failure so you can see the error state.
                 // Remove this guard and call session.signIn() unconditionally once

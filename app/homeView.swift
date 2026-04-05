@@ -273,6 +273,20 @@ struct HabitCard: View {
                         )
                 }
 
+                let remaining = habit.totalTimesRequired - habit.timesCompleted
+                HStack {
+                    Spacer()
+                    if habit.isCompleted {
+                        Text("all done!")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .foregroundStyle(habit.color)
+                    } else {
+                        Text("\(remaining) left")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule().fill(Color(.systemGray5)).frame(height: 6)

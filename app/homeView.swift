@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+
 // MARK: - Habit Model
 
 struct Habit: Identifiable {
@@ -21,6 +22,7 @@ struct Habit: Identifiable {
 // MARK: - Home View
 
 struct HomeView: View {
+    @EnvironmentObject var session: AppSession
     @State private var habits: [Habit] = [
         Habit(name: "Morning Run", frequency: .day, timesGoal: 1, timesCompleted: 0, color: .blue),
         Habit(name: "Read 20 Pages", frequency: .day, timesGoal: 1, timesCompleted: 1, color: .green),
@@ -28,7 +30,6 @@ struct HomeView: View {
     @State private var showHabitCreation = false
     @State private var showProfile = false
 
-    // Incomplete habits first, completed habits sink to the bottom
     private var sortedHabits: [Habit] {
         habits.sorted { lhs, rhs in
             if lhs.isCompleted == rhs.isCompleted { return false }
@@ -52,8 +53,6 @@ struct HomeView: View {
                                 removal: .opacity
                             ))
                         }
-
-                        // Spacer so the last card isn't hidden behind the + button
                         Spacer(minLength: 90)
                     }
                     .padding(.horizontal, 16)
@@ -63,20 +62,16 @@ struct HomeView: View {
 
                 // MARK: Add Habit Button
                 Button {
-                    withAnimation {
-                        showHabitCreation = true
-                    }
+                    withAnimation { showHabitCreation = true }
                 } label: {
                     ZStack {
                         Circle()
                             .fill(.ultraThinMaterial)
                             .frame(width: 62, height: 62)
                             .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 6)
-
                         Circle()
                             .strokeBorder(Color.primary.opacity(0.15), lineWidth: 1)
                             .frame(width: 62, height: 62)
-
                         Image(systemName: "plus")
                             .font(.system(size: 26, weight: .medium))
                             .foregroundStyle(.primary)
@@ -89,10 +84,7 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    // Profile avatar button
-                    Button {
-                        showProfile = true
-                    } label: {
+                    Button { showProfile = true } label: {
                         ZStack {
                             Circle()
                                 .fill(Color(.systemGray4))
@@ -105,35 +97,41 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                 }
             }
-        }
 
-        // MARK: Habit Creation Modal
-        .overlay {
-            if showHabitCreation {
-                HabitCreationView(isPresented: $showHabitCreation) { name, frequency, count, color in
-                    let newHabit = Habit(
-                        name: name,
-                        frequency: frequency,
-                        timesGoal: count,
-                        timesCompleted: 0,
-                        color: color
-                    )
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
-                        habits.append(newHabit)
+            // MARK: Habit Creation Modal — inside NavigationStack
+            .overlay {
+                if showHabitCreation {
+                    HabitCreationView(isPresented: $showHabitCreation) { name, frequency, count, color in
+                        let newHabit = Habit(
+                            name: name,
+                            frequency: frequency,
+                            timesGoal: count,
+                            timesCompleted: 0,
+                            color: color
+                        )
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
+                            habits.append(newHabit)
+                        }
                     }
                 }
             }
-        }
 
-        // MARK: Profile Sheet
-        .sheet(isPresented: $showProfile) {
-            ProfileSettingsView()
+            // MARK: Profile Sheet — inside NavigationStack
+            .sheet(isPresented: $showProfile) {
+                ProfileSettingsView(onLogOut: {
+                    showProfile = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        session.signOut()
+                    }
+                })
+                .environmentObject(session)
+            }
         }
     }
 
     // MARK: Helpers
 
-    private func logCompletion(for id: UUID) {
+    func logCompletion(for id: UUID) {
         guard let index = habits.firstIndex(where: { $0.id == id }) else { return }
         withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
             if habits[index].timesCompleted < habits[index].timesGoal {
@@ -142,7 +140,7 @@ struct HomeView: View {
         }
     }
 
-    private func todayTitle() -> String {
+    func todayTitle() -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM d"
         return formatter.string(from: Date())
@@ -159,7 +157,6 @@ struct HabitCard: View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 10) {
 
-                // Top row: icon + name + status badge
                 HStack(spacing: 12) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -175,7 +172,6 @@ struct HabitCard: View {
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(habit.isCompleted ? .secondary : .primary)
                             .strikethrough(habit.isCompleted, color: .secondary)
-
                         Text("per \(habit.frequency.rawValue.lowercased())")
                             .font(.system(size: 12))
                             .foregroundStyle(.tertiary)
@@ -183,7 +179,6 @@ struct HabitCard: View {
 
                     Spacer()
 
-                    // Times count badge
                     Text("\(habit.timesCompleted)/\(habit.timesGoal)")
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .foregroundStyle(habit.isCompleted ? habit.color : .secondary)
@@ -197,24 +192,17 @@ struct HabitCard: View {
                         )
                 }
 
-                // Progress bar
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
+                        Capsule().fill(Color(.systemGray5)).frame(height: 6)
                         Capsule()
-                            .fill(Color(.systemGray5))
-                            .frame(height: 6)
-
-                        Capsule()
-                            .fill(habit.isCompleted
-                                ? habit.color
-                                : habit.color.opacity(0.75))
+                            .fill(habit.isCompleted ? habit.color : habit.color.opacity(0.75))
                             .frame(width: geo.size.width * habit.progressFraction, height: 6)
                             .animation(.spring(response: 0.5, dampingFraction: 0.7), value: habit.progressFraction)
                     }
                 }
                 .frame(height: 6)
 
-                // Completed label
                 if habit.isCompleted {
                     Text("COMPLETED!")
                         .font(.system(size: 11, weight: .bold))
@@ -246,4 +234,5 @@ struct HabitCard: View {
 
 #Preview {
     HomeView()
+        .environmentObject(AppSession())
 }

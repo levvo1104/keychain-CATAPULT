@@ -1,14 +1,18 @@
-//
-
-//
-
 import SwiftUI
 
 @main
 struct keychainApp: App {
+    @StateObject private var session = AppSession()
+
     var body: some Scene {
-        WindowGroup { // Ensure the { follows immediately or on a new line after ()
-            ContentView()
+        WindowGroup {
+            if session.isSignedIn {
+                HomeView()
+                    .environmentObject(session)
+            } else {
+                SignInView()
+                    .environmentObject(session)
+            }
         }
     }
 }
